@@ -6,8 +6,8 @@ public record Demo(
     Long id,
     Long userId,
     Long roomId,
-    LocalDate starDate,
-    LocalDate enDate,
+    LocalDate startDate,
+    LocalDate endDate,
     ReservationStatus status
 
 ) {

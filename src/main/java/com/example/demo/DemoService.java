@@ -21,7 +21,7 @@ public class DemoService {
     }
 
     public Demo getReservationByID(Long id) {
-        if (demoMap.containsKey(id)) {
+        if (!demoMap.containsKey(id)) {
             throw new NoSuchElementException("LOl" + id);
         }
         return demoMap.get(id);

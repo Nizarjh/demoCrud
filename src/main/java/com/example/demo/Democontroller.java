@@ -3,7 +3,9 @@ package com.example.demo;
 import java.util.List;
 
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,9 +22,10 @@ public class Democontroller {
     }
 
     @GetMapping("/{id}")
-    public Demo getReservationByID(@PathVariable("id") Long id) {
+    public ResponseEntity<Demo> getReservationByID(@PathVariable("id") Long id) {
 
-        return DemoService.getReservationByID(id);
+        return ResponseEntity.status(HttpStatus.OK)
+        .body(DemoService.getReservationByID(id));
     }
 
     @GetMapping()
@@ -32,9 +35,10 @@ public class Democontroller {
     }
 
     @PostMapping
-    public Demo createReservation(@RequestBody Demo resertocreate){
+    public ResponseEntity<Demo> createReservation(@RequestBody Demo resertocreate){
         log.info("Called createReservation");
-        return DemoService.createReservation(resertocreate);
+        return ResponseEntity.status(201).body(DemoService.createReservation(resertocreate));
+        // return DemoService.createReservation(resertocreate);
     }
 
 

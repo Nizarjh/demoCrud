@@ -1,6 +1,5 @@
 package com.example.demo;
 
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +21,7 @@ public class DemoService {
 
     public Demo getReservationByID(Long id) {
         if (!demoMap.containsKey(id)) {
-            throw new NoSuchElementException("LOl" + id);
+            throw new NoSuchElementException("Not found by id =" + id);
         }
         return demoMap.get(id);
     }
@@ -45,7 +44,69 @@ public class DemoService {
                 resertocreate.startDate(),
                 resertocreate.endDate(),
                 ReservationStatus.PENDING);
-                demoMap.put(newDemo.id(), newDemo);
-                return newDemo;
+        demoMap.put(newDemo.id(), newDemo);
+        return newDemo;
+    }
+
+    public Demo updateReservation(Long id, Demo demoToupdate) {
+        if (!demoMap.containsKey(id)) {
+            throw new NoSuchElementException("Not found  id =" + id);
+        }
+        var reservation = demoMap.get(id);
+
+        if (reservation.status() != ReservationStatus.PENDING) {
+            throw new IllegalStateException("cannot modify reservation: status= " + reservation.status());
+        }
+        var updatedDemo = new Demo(
+                reservation.id(),
+                demoToupdate.userId(),
+                demoToupdate.roomId(),
+                demoToupdate.startDate(),
+                demoToupdate.endDate(),
+                ReservationStatus.PENDING);
+        demoMap.put(reservation.id(), updatedDemo);
+        return updatedDemo;
+    }
+
+    public void deleteReservation(Long id) {
+        if (!demoMap.containsKey(id)) {
+            throw new NoSuchElementException("Not found id =" + id);
+        }
+        demoMap.remove(id);
+    }
+
+    public Demo IsApproved(Long id) {
+        if (!demoMap.containsKey(id)) {
+            throw new NoSuchElementException("Not found id =" + id);
+        }
+        var reservation = demoMap.get(id);
+        var isConflict = isReservationConflict(reservation);
+        if (reservation.status() != ReservationStatus.PENDING || isConflict) {
+            throw new IllegalStateException(
+                    "Cannot approve reservation: status= " + reservation.status() + "id= " + id);
+        }
+        var approvedReservation = new Demo(
+                reservation.id(),
+                reservation.userId(),
+                reservation.roomId(),
+                reservation.startDate(),
+                reservation.endDate(),
+                ReservationStatus.APPROVED);
+        return approvedReservation;
+    }
+
+    private boolean isReservationConflict(Demo demoReservation) {
+        for (Demo existingDemo : demoMap.values()) {
+            if (demoReservation.id().equals(existingDemo.id())
+                    || !demoReservation.roomId().equals(existingDemo.roomId())
+                   ||  !existingDemo.status().equals(ReservationStatus.APPROVED)) {
+                continue;
+            }
+            if (demoReservation.startDate().isBefore(existingDemo.startDate())
+            && demoReservation.endDate().isBefore(existingDemo.endDate())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

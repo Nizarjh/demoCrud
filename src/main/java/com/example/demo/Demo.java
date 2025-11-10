@@ -10,5 +10,4 @@ public record Demo(
     LocalDate endDate,
     ReservationStatus status
 
-) {
-}
+) {}

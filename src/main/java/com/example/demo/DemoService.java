@@ -33,7 +33,7 @@ public class DemoService {
     }
 
     public Demo createReservation(Demo resertocreate) {
-        if (resertocreate.id() != null && resertocreate.status() != null) {
+        if (resertocreate.id() != null || resertocreate.status() != null) {
             throw new IllegalArgumentException("Id and status should be empty");
         }
 
@@ -65,6 +65,7 @@ public class DemoService {
                 demoToupdate.endDate(),
                 ReservationStatus.PENDING);
         demoMap.put(reservation.id(), updatedDemo);
+        demoMap.put(id, updatedDemo);
         return updatedDemo;
     }
 
@@ -92,6 +93,7 @@ public class DemoService {
                 reservation.startDate(),
                 reservation.endDate(),
                 ReservationStatus.APPROVED);
+        demoMap.put(reservation.id(), approvedReservation);
         return approvedReservation;
     }
 
@@ -99,11 +101,11 @@ public class DemoService {
         for (Demo existingDemo : demoMap.values()) {
             if (demoReservation.id().equals(existingDemo.id())
                     || !demoReservation.roomId().equals(existingDemo.roomId())
-                   ||  !existingDemo.status().equals(ReservationStatus.APPROVED)) {
+                    || !existingDemo.status().equals(ReservationStatus.APPROVED)) {
                 continue;
             }
-            if (demoReservation.startDate().isBefore(existingDemo.startDate())
-            && demoReservation.endDate().isBefore(existingDemo.endDate())) {
+            if (demoReservation.startDate().isAfter(existingDemo.endDate())
+                    && demoReservation.startDate().isBefore(demoReservation.endDate())) {
                 return true;
             }
         }

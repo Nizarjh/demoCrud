@@ -31,8 +31,8 @@ public class Democontroller {
     }
 
     @GetMapping()
-    public List<Demo> getReservationByID() {
-        log.info("Called getReservationByID");
+    public List<Demo> getReservationALL() {
+        log.info("Called getReservationALL");
         return DemoService.getReservationALL();
     }
 

@@ -1,34 +1,36 @@
 package com.example.demo;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.stereotype.Service;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class DemoService {
-    private final Map<Long, Demo> demoMap;
-    private final AtomicLong idCounter;
 
-    public DemoService() {
-        demoMap = new HashMap<>();
-        idCounter = new AtomicLong();
+    private final DemoRepository repository;
+
+    public DemoService(DemoRepository repository) {
+
+        this.repository = repository;
     }
 
     public Demo getReservationByID(Long id) {
-        if (!demoMap.containsKey(id)) {
-            throw new NoSuchElementException("Not found by id =" + id);
-        }
-        return demoMap.get(id);
+        DemoEntity demoEntity = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Not found by id =" + id));
+
+        return toDomainDemo(demoEntity);
     }
 
     public List<Demo> getReservationALL() {
-        return new ArrayList<>(demoMap.values()) {
-        };
+        List<DemoEntity> allEntities = repository.findAll();
+
+        List<Demo> reservationList = allEntities.stream()
+                .map(it -> toDomainDemo(it))
+                .toList();
+
+        return reservationList;
 
     }
 
@@ -37,78 +39,83 @@ public class DemoService {
             throw new IllegalArgumentException("Id and status should be empty");
         }
 
-        var newDemo = new Demo(
-                idCounter.incrementAndGet(),
+        var entityToSave = new DemoEntity(
+                null,
                 resertocreate.userId(),
                 resertocreate.roomId(),
                 resertocreate.startDate(),
                 resertocreate.endDate(),
                 ReservationStatus.PENDING);
-        demoMap.put(newDemo.id(), newDemo);
-        return newDemo;
+        return toDomainDemo(repository.save(entityToSave));
+
     }
 
     public Demo updateReservation(Long id, Demo demoToupdate) {
-        if (!demoMap.containsKey(id)) {
-            throw new NoSuchElementException("Not found  id =" + id);
-        }
-        var reservation = demoMap.get(id);
 
-        if (reservation.status() != ReservationStatus.PENDING) {
-            throw new IllegalStateException("cannot modify reservation: status= " + reservation.status());
+        var demoEntity = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Not found by id =" + id));
+
+        if (demoEntity.getStatus() != ReservationStatus.PENDING) {
+            throw new IllegalStateException("cannot modify reservation: status= " + demoEntity.getStatus());
         }
-        var updatedDemo = new Demo(
-                reservation.id(),
+        var updatedDemo = new DemoEntity(
+                demoEntity.getId(),
                 demoToupdate.userId(),
                 demoToupdate.roomId(),
                 demoToupdate.startDate(),
                 demoToupdate.endDate(),
                 ReservationStatus.PENDING);
-        demoMap.put(reservation.id(), updatedDemo);
-        demoMap.put(id, updatedDemo);
-        return updatedDemo;
+
+        return toDomainDemo(repository.save(updatedDemo));
     }
 
     public void deleteReservation(Long id) {
-        if (!demoMap.containsKey(id)) {
-            throw new NoSuchElementException("Not found id =" + id);
+        if (!repository.existsById(id)) {
+            throw new EntityNotFoundException("Not found id =" + id);
         }
-        demoMap.remove(id);
+        repository.deleteById(id);
     }
 
     public Demo IsApproved(Long id) {
-        if (!demoMap.containsKey(id)) {
-            throw new NoSuchElementException("Not found id =" + id);
-        }
-        var reservation = demoMap.get(id);
-        var isConflict = isReservationConflict(reservation);
-        if (reservation.status() != ReservationStatus.PENDING || isConflict) {
+
+        var demoEntity = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Not found by id =" + id));
+
+        var isConflict = isReservationConflict(demoEntity);
+        if (demoEntity.getStatus() != ReservationStatus.PENDING || isConflict) {
             throw new IllegalStateException(
-                    "Cannot approve reservation: status= " + reservation.status() + "id= " + id);
+                    "Cannot approve reservation: status= " + demoEntity.getStatus() + "id= " + id);
         }
-        var approvedReservation = new Demo(
-                reservation.id(),
-                reservation.userId(),
-                reservation.roomId(),
-                reservation.startDate(),
-                reservation.endDate(),
-                ReservationStatus.APPROVED);
-        demoMap.put(reservation.id(), approvedReservation);
-        return approvedReservation;
+        demoEntity.setStatus(ReservationStatus.APPROVED);
+        repository.save(demoEntity);
+        return toDomainDemo(demoEntity);
     }
 
-    private boolean isReservationConflict(Demo demoReservation) {
-        for (Demo existingDemo : demoMap.values()) {
-            if (demoReservation.id().equals(existingDemo.id())
-                    || !demoReservation.roomId().equals(existingDemo.roomId())
-                    || !existingDemo.status().equals(ReservationStatus.APPROVED)) {
+    private boolean isReservationConflict(DemoEntity demoReservation) {
+        var allReservation = repository.findAll();
+        for (DemoEntity existingDemoEntity : allReservation) {
+            if (demoReservation.getId().equals(existingDemoEntity.getId())
+                    || !demoReservation.getRoomId().equals(existingDemoEntity.getRoomId())
+                    || !existingDemoEntity.getStatus().equals(ReservationStatus.APPROVED)) {
                 continue;
             }
-            if (demoReservation.startDate().isAfter(existingDemo.endDate())
-                    && demoReservation.startDate().isBefore(demoReservation.endDate())) {
+            if (demoReservation.getStartDate().isAfter(existingDemoEntity.getEndDate())
+                    && demoReservation.getStartDate().isBefore(demoReservation.getEndDate())) {
                 return true;
             }
         }
         return false;
     }
+
+    private Demo toDomainDemo(DemoEntity demoEntity) {
+        return new Demo(
+                demoEntity.getId(),
+                demoEntity.getUserId(),
+                demoEntity.getRoomId(),
+                demoEntity.getStartDate(),
+                demoEntity.getEndDate(),
+                demoEntity.getStatus());
+
+    }
+
 }

@@ -44,8 +44,7 @@ public class DemoEntity {
             Long roomId,
             LocalDate startDate,
             LocalDate endDate,
-            ReservationStatus status) 
-    {
+            ReservationStatus status) {
         this.id = id;
         this.userId = userId;
         this.roomId = roomId;

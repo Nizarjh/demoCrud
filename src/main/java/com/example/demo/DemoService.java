@@ -2,14 +2,18 @@ package com.example.demo;
 
 import java.util.List;
 
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 @Service
 public class DemoService {
 
     private final DemoRepository repository;
+    public static final org.slf4j.Logger log = LoggerFactory.getLogger(DemoService.class);
 
     public DemoService(DemoRepository repository) {
 
@@ -69,11 +73,26 @@ public class DemoService {
         return toDomainDemo(repository.save(updatedDemo));
     }
 
-    public void deleteReservation(Long id) {
-        if (!repository.existsById(id)) {
-            throw new EntityNotFoundException("Not found id =" + id);
+    @Transactional
+    public void cancelReservation(Long id) {
+        DemoEntity demoEntity = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Not found by id =" + id));
+        // if (!repository.existsById(id)) {
+        // throw new EntityNotFoundException("Not found id =" + id);
+        // }
+        if (demoEntity.getStatus() == ReservationStatus.CANCELLED) {
+            throw new IllegalStateException("Reservation " + id + " is already cancelled");
         }
-        repository.deleteById(id);
+        repository.setStatus(id, ReservationStatus.CANCELLED);
+        log.info("Successfully cancel reservation: id={}", id);
+
+    }
+
+    @Transactional
+    @Scheduled(cron = "0 * * * * *")
+    public void autoDelete() {
+        repository.deleteAllCanceledEntity();
+        log.info("called autoDelete");
     }
 
     public Demo IsApproved(Long id) {
@@ -94,13 +113,15 @@ public class DemoService {
     private boolean isReservationConflict(DemoEntity demoReservation) {
         var allReservation = repository.findAll();
         for (DemoEntity existingDemoEntity : allReservation) {
-            if (demoReservation.getId().equals(existingDemoEntity.getId())
-                    || !demoReservation.getRoomId().equals(existingDemoEntity.getRoomId())
-                    || !existingDemoEntity.getStatus().equals(ReservationStatus.APPROVED)) {
+            if (demoReservation.getId().equals(existingDemoEntity.getId()))
                 continue;
-            }
-            if (demoReservation.getStartDate().isAfter(existingDemoEntity.getEndDate())
-                    && demoReservation.getStartDate().isBefore(demoReservation.getEndDate())) {
+            if (!demoReservation.getRoomId().equals(existingDemoEntity.getRoomId()))
+                continue;
+            if (!existingDemoEntity.getStatus().equals(ReservationStatus.APPROVED))
+                continue;
+
+            if (demoReservation.getStartDate().isBefore(existingDemoEntity.getEndDate())
+                    && demoReservation.getEndDate().isAfter(existingDemoEntity.getStartDate())) {
                 return true;
             }
         }

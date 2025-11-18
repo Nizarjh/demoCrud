@@ -49,25 +49,22 @@ public class Democontroller {
             @RequestBody Demo demoToupdate) {
         log.info("Called updateReservation id={}, demoToUpdate={}", id, demoToupdate);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(DemoService.updateReservation(id,demoToupdate));
+                .body(DemoService.updateReservation(id, demoToupdate));
     }
 
-    @DeleteMapping("/{id}")
-     public ResponseEntity<Void> deleteReservation(
+    @DeleteMapping("/{id}/cancel")
+    public ResponseEntity<Void> cancelReservation(
             @PathVariable("id") Long id) {
-        log.info("Called DeleteReservation id={}", id);
-        try {
-           DemoService.deleteReservation(id);
-        return ResponseEntity.status(HttpStatus.OK).build(); 
-        } catch (Exception e) {
-            return ResponseEntity.status(404).build(); 
-        }
+        log.info("Called CancelReservation id={}", id);
+        DemoService.cancelReservation(id);
+        return ResponseEntity.status(HttpStatus.OK).build();
 
     }
+
     @PostMapping("/{id}/approve")
-    public ResponseEntity<Demo> IsApproved( @PathVariable("id") Long id){
+    public ResponseEntity<Demo> IsApproved(@PathVariable("id") Long id) {
         log.info("Called IsApproved id={}", id);
-            return ResponseEntity.status(HttpStatus.OK)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(DemoService.IsApproved(id));
     }
 }

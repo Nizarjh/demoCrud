@@ -22,7 +22,7 @@ public class DemoService {
 
     public Demo getReservationByID(Long id) {
         DemoEntity demoEntity = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Not found by id =" + id));
+                .orElseThrow(() -> new EntityNotFoundException("Not found by id = " + id));
 
         return toDomainDemo(demoEntity);
     }
@@ -39,10 +39,12 @@ public class DemoService {
     }
 
     public Demo createReservation(Demo resertocreate) {
-        if (resertocreate.id() != null || resertocreate.status() != null) {
-            throw new IllegalArgumentException("Id and status should be empty");
+        if (resertocreate.id() != null) {
+            throw new IllegalArgumentException("Id should be empty");
         }
-
+        if (resertocreate.status() != null) {
+            throw new IllegalArgumentException("Status should be empty");
+        }
         var entityToSave = new DemoEntity(
                 null,
                 resertocreate.userId(),
@@ -57,10 +59,10 @@ public class DemoService {
     public Demo updateReservation(Long id, Demo demoToupdate) {
 
         var demoEntity = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Not found by id =" + id));
+                .orElseThrow(() -> new EntityNotFoundException("Not found by id = " + id));
 
         if (demoEntity.getStatus() != ReservationStatus.PENDING) {
-            throw new IllegalStateException("cannot modify reservation: status= " + demoEntity.getStatus());
+            throw new IllegalStateException("cannot modify reservation: status = " + demoEntity.getStatus());
         }
         var updatedDemo = new DemoEntity(
                 demoEntity.getId(),
@@ -76,7 +78,7 @@ public class DemoService {
     @Transactional
     public void cancelReservation(Long id) {
         DemoEntity demoEntity = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Not found by id =" + id));
+                .orElseThrow(() -> new EntityNotFoundException("Not found by id = " + id));
         // if (!repository.existsById(id)) {
         // throw new EntityNotFoundException("Not found id =" + id);
         // }
@@ -84,7 +86,7 @@ public class DemoService {
             throw new IllegalStateException("Reservation " + id + " is already cancelled");
         }
         repository.setStatus(id, ReservationStatus.CANCELLED);
-        log.info("Successfully cancel reservation: id={}", id);
+        log.info("Successfully cancel reservation: id = {}", id);
 
     }
 
@@ -98,12 +100,12 @@ public class DemoService {
     public Demo IsApproved(Long id) {
 
         var demoEntity = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Not found by id =" + id));
+                .orElseThrow(() -> new EntityNotFoundException("Not found by id = " + id));
 
         var isConflict = isReservationConflict(demoEntity);
         if (demoEntity.getStatus() != ReservationStatus.PENDING || isConflict) {
             throw new IllegalStateException(
-                    "Cannot approve reservation: status= " + demoEntity.getStatus() + "id= " + id);
+                    "Cannot approve reservation: status = " + demoEntity.getStatus() + "id = " + id);
         }
         demoEntity.setStatus(ReservationStatus.APPROVED);
         repository.save(demoEntity);

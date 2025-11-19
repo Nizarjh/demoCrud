@@ -39,11 +39,12 @@ public class DemoService {
     }
 
     public Demo createReservation(Demo resertocreate) {
-        if (resertocreate.id() != null) {
-            throw new IllegalArgumentException("Id should be empty");
-        }
+
         if (resertocreate.status() != null) {
             throw new IllegalArgumentException("Status should be empty");
+        }
+        if (!resertocreate.endDate().isAfter(resertocreate.startDate())) {
+            throw new IllegalArgumentException("start date must be 1 day earlier than end date");
         }
         var entityToSave = new DemoEntity(
                 null,

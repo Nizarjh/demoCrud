@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -47,7 +48,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(exception = {
             IllegalArgumentException.class,
-            IllegalStateException.class
+            IllegalStateException.class,
+            MethodArgumentNotValidException.class
     })
     public ResponseEntity<ErrorResponseDto> handleBadRequest(
             Exception e) {

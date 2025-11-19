@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 @RequestMapping("/reservation")
 @RestController
 public class Democontroller {
@@ -37,7 +39,7 @@ public class Democontroller {
     }
 
     @PostMapping
-    public ResponseEntity<Demo> createReservation(@RequestBody Demo resertocreate) {
+    public ResponseEntity<Demo> createReservation(@RequestBody @Valid Demo resertocreate) {
         log.info("Called createReservation");
         return ResponseEntity.status(201).body(DemoService.createReservation(resertocreate));
 
@@ -46,7 +48,7 @@ public class Democontroller {
     @PutMapping("/{id}")
     public ResponseEntity<Demo> updateReservation(
             @PathVariable("id") Long id,
-            @RequestBody Demo demoToupdate) {
+            @RequestBody @Valid Demo demoToupdate) {
         log.info("Called updateReservation id={}, demoToUpdate={}", id, demoToupdate);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(DemoService.updateReservation(id, demoToupdate));

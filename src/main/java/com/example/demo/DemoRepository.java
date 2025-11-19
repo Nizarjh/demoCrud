@@ -13,12 +13,12 @@ public interface DemoRepository extends JpaRepository<DemoEntity, Long> {
 
         @Modifying
         @Query("""
-                        update DemoEntity r
-                        set r.status = :status
-                        where r.id = :id
-                        """)
+                update DemoEntity r
+                set r.status = :status
+                where r.id = :id
+                """)
         int setStatus(
-                        @Param("id") Long id,
-                        @Param("status") ReservationStatus status);
+                @Param("id") Long id,
+                @Param("status") ReservationStatus status);
 
 }

@@ -41,7 +41,7 @@ public interface DemoRepository extends JpaRepository<DemoEntity, Long> {
         @Query("""
                         SELECT r from DemoEntity r
                         WHERE (:roomId IS NULL OR r.roomId = :roomId)
-                        AND (:userID IS NULL OR r.userId = :userId)
+                        AND (:userId IS NULL OR r.userId = :userId)
                         """)
         List<DemoEntity> searchByFilter(
                         @Param("roomId") Long roomId,

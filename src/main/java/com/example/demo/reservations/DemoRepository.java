@@ -21,7 +21,7 @@ public interface DemoRepository extends JpaRepository<DemoEntity, Long> {
                         set r.status = :status
                         where r.id = :id
                         """)
-        int setStatus(
+        void setStatus(
                         @Param("id") Long id,
                         @Param("status") ReservationStatus status);
 

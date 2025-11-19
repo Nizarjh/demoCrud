@@ -1,4 +1,4 @@
-package com.example.demo;
+package com.example.demo.reservations;
 
 import java.util.List;
 import org.slf4j.LoggerFactory;

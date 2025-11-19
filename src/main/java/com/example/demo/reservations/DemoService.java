@@ -1,4 +1,4 @@
-package com.example.demo;
+package com.example.demo.reservations;
 
 import java.util.List;
 
@@ -65,6 +65,9 @@ public class DemoService {
         if (demoEntity.getStatus() != ReservationStatus.PENDING) {
             throw new IllegalStateException("cannot modify reservation: status = " + demoEntity.getStatus());
         }
+        if (!demoToupdate.endDate().isAfter(demoToupdate.startDate())) {
+            throw new IllegalArgumentException("Start date must be 1 day earlier than end date");
+        }
         var updatedDemo = new DemoEntity(
                 demoEntity.getId(),
                 demoToupdate.userId(),
@@ -80,9 +83,10 @@ public class DemoService {
     public void cancelReservation(Long id) {
         DemoEntity demoEntity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Not found by id = " + id));
-        // if (!repository.existsById(id)) {
-        // throw new EntityNotFoundException("Not found id =" + id);
-        // }
+
+        if (demoEntity.getStatus() == ReservationStatus.APPROVED) {
+            throw new IllegalStateException("Cannot cancel approved reservation " + id);
+        }
         if (demoEntity.getStatus() == ReservationStatus.CANCELLED) {
             throw new IllegalStateException("Reservation " + id + " is already cancelled");
         }
@@ -92,7 +96,7 @@ public class DemoService {
     }
 
     @Transactional
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "10 * * * * *")
     public void autoDelete() {
         repository.deleteAllCanceledEntity();
         log.info("called autoDelete");
@@ -120,7 +124,7 @@ public class DemoService {
                 continue;
             if (!demoReservation.getRoomId().equals(existingDemoEntity.getRoomId()))
                 continue;
-            if (!existingDemoEntity.getStatus().equals(ReservationStatus.APPROVED))
+            if (!(existingDemoEntity.getStatus() == ReservationStatus.APPROVED))
                 continue;
 
             if (demoReservation.getStartDate().isBefore(existingDemoEntity.getEndDate())
